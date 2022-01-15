@@ -28,11 +28,11 @@ async fn main() {
         clear_background(LIGHTGRAY);
         if move_time.elapsed().as_millis() > 300 {
             move_time = Instant::now();
-            for block in &mut moving_blocks {
-                block.fall();
-            }
             if moving_blocks.iter().any(|mb| mb.if_stopped(&laying_blocks)) {
                 laying_blocks.append(&mut moving_blocks);
+            }
+            for block in &mut moving_blocks {
+                block.fall();
             }
         }
         if move_time.elapsed().as_millis() > 20 {
@@ -62,6 +62,10 @@ async fn main() {
             let move_left = |mb: &mut [Block]| mb.iter_mut().for_each(|b| b.0.x -= BLOCK_SIZE);
             try_action(move_left, &laying_blocks, &mut moving_blocks);
         }
+        if is_key_pressed(KeyCode::Down) {
+            let move_down = |mb: &mut [Block]| mb.iter_mut().for_each(|b| b.0.y += BLOCK_SIZE);
+            try_action(move_down, &laying_blocks, &mut moving_blocks);
+        }
         if moving_blocks.is_empty() {
             let new_shape = create_shape();
             moving_blocks = new_shape.0;
@@ -79,15 +83,15 @@ async fn main() {
 }
 
 #[derive(Debug, Clone)]
-struct Block(Rect);
+struct Block(Rect, Color);
 
 impl Block {
     fn draw(&self) {
-        draw_rectangle(self.0.x, self.0.y, self.0.w, self.0.h, BLUE);
+        draw_rectangle(self.0.x, self.0.y, self.0.w, self.0.h, self.1);
     }
 
-    fn new(x: f32, y: f32) -> Self {
-        Block(Rect::new(x, y, BLOCK_SIZE, BLOCK_SIZE))
+    fn new(x: f32, y: f32, color: Color) -> Self {
+        Block(Rect::new(x, y, BLOCK_SIZE, BLOCK_SIZE), color)
     }
 
     fn fall(&mut self) {
@@ -117,20 +121,20 @@ fn create_shape() -> (Vec<Block>, bool) {
     let shape: i32 = rand::gen_range(0, 6);
     let x_start = rand::gen_range(1_i32, 9) as f32;
 
-    let blocks_tuple = match shape {
-        0 => [(0, -1), (0, 0), (1, 0), (1, -1)],
-        1 => [(0, 0), (1, 0), (-1, 0), (-1, -1)],
-        2 => [(0, 0), (1, 0), (-1, 0), (1, -1)],
-        3 => [(0, 0), (-1, 0), (1, 0), (2, 0)],
-        4 => [(0, 0), (0, -1), (1, 0), (-1, 0)],
-        5 => [(0, 0), (0, -1), (1, -1), (-1, 0)],
-        6 => [(0, 0), (0, -1), (1, 0), (-1, -1)],
+    let (blocks_tuple, color) = match shape {
+        0 => ([(0, -1), (0, 0), (1, 0), (1, -1)], MAGENTA),
+        1 => ([(0, 0), (1, 0), (-1, 0), (-1, -1)], BLUE),
+        2 => ([(0, 0), (1, 0), (-1, 0), (1, -1)], PINK),
+        3 => ([(0, 0), (-1, 0), (1, 0), (2, 0)], ORANGE),
+        4 => ([(0, 0), (0, -1), (1, 0), (-1, 0)], GOLD),
+        5 => ([(0, 0), (0, -1), (1, -1), (-1, 0)], LIME),
+        6 => ([(0, 0), (0, -1), (1, 0), (-1, -1)], VIOLET),
         _ => panic!(),
     };
     (
         blocks_tuple
             .into_iter()
-            .map(|(x, y)| Block::new((x_start + x as f32) * BLOCK_SIZE, y as f32 * BLOCK_SIZE))
+            .map(|(x, y)| Block::new((x_start + x as f32) * BLOCK_SIZE, y as f32 * BLOCK_SIZE, color))
             .collect(),
         shape != 0,
     )
