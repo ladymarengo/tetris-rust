@@ -1,6 +1,9 @@
 use std::{mem, time::Instant};
 
-use macroquad::prelude::*;
+use macroquad::{
+    audio::{load_sound_from_bytes, play_sound, PlaySoundParams},
+    prelude::*,
+};
 
 const BLOCK_SIZE: f32 = 30.0;
 const SCREEN_WIDTH: f32 = BLOCK_SIZE * 10.0;
@@ -19,6 +22,16 @@ fn window_conf() -> Conf {
 }
 #[macroquad::main(window_conf)]
 async fn main() {
+    let sound = load_sound_from_bytes(include_bytes!("../music.ogg"))
+        .await
+        .unwrap();
+    play_sound(
+        sound,
+        PlaySoundParams {
+            looped: true,
+            volume: 0.2,
+        },
+    );
     let mut moving_blocks: Vec<Block> = vec![];
     let mut move_time = Instant::now();
     let mut laying_blocks: Vec<Block> = vec![];
