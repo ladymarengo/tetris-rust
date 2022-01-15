@@ -1,4 +1,4 @@
-use std::time::Instant;
+use std::{mem, time::Instant};
 
 use macroquad::prelude::*;
 
@@ -26,7 +26,7 @@ async fn main() {
     println!("{} {}", screen_width(), screen_height());
     loop {
         clear_background(LIGHTGRAY);
-        if move_time.elapsed().as_millis() > 100 {
+        if move_time.elapsed().as_millis() > 300 {
             move_time = Instant::now();
             for block in &mut moving_blocks {
                 block.fall();
@@ -52,17 +52,15 @@ async fn main() {
             }
         }
         if is_key_pressed(KeyCode::Up) && !moving_blocks.is_empty() && rotatable {
-            rotate(&mut moving_blocks);
+            try_action(rotate, &laying_blocks, &mut moving_blocks);
         }
         if is_key_pressed(KeyCode::Right) {
-            for block in &mut moving_blocks {
-                block.0.x += BLOCK_SIZE;
-            }
+            let move_right = |mb: &mut [Block]| mb.iter_mut().for_each(|b| b.0.x += BLOCK_SIZE);
+            try_action(move_right, &laying_blocks, &mut moving_blocks);
         }
         if is_key_pressed(KeyCode::Left) {
-            for block in &mut moving_blocks {
-                block.0.x -= BLOCK_SIZE;
-            }
+            let move_left = |mb: &mut [Block]| mb.iter_mut().for_each(|b| b.0.x -= BLOCK_SIZE);
+            try_action(move_left, &laying_blocks, &mut moving_blocks);
         }
         if moving_blocks.is_empty() {
             let new_shape = create_shape();
@@ -136,4 +134,21 @@ fn create_shape() -> (Vec<Block>, bool) {
             .collect(),
         shape != 0,
     )
+}
+
+fn try_action<F>(func: F, laying_blocks: &[Block], moving_blocks: &mut Vec<Block>)
+where
+    F: Fn(&mut [Block]),
+{
+    let mut new_blocks = moving_blocks.to_owned();
+    func(&mut new_blocks);
+
+    if !new_blocks.iter().any(|nb| {
+        laying_blocks.iter().any(|lb| nb.0 == lb.0)
+            || nb.0.x < 0.0
+            || nb.0.x >= SCREEN_WIDTH as f32
+            || nb.0.y >= SCREEN_HEIGHT as f32
+    }) {
+        mem::swap(moving_blocks, &mut new_blocks);
+    }
 }
