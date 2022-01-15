@@ -1,9 +1,9 @@
-use std::{mem, time::Instant};
+use std::{mem, time::Instant, process::exit};
 
 use macroquad::{
     audio::{load_sound_from_bytes, play_sound, PlaySoundParams},
-    prelude::{self, *},
-    ui::root_ui,
+    prelude::*,
+    ui::{root_ui, Skin}, hash,
 };
 
 const BLOCK_SIZE: f32 = 30.0;
@@ -33,6 +33,8 @@ async fn main() {
             volume: 0.2,
         },
     );
+    
+
     loop {
         menu().await;
         game().await;
@@ -40,12 +42,30 @@ async fn main() {
 }
 
 async fn menu() {
-    loop {
-        clear_background(WHITE);
-        root_ui().label(vec2(50.0, 50.0), "Start");
-        if root_ui().button(None, "Push me") {
-            return;
+    let skin = {
+        let button_style = root_ui()
+            .style_builder()
+            .text_color(BLACK)
+            .font_size(30)
+            .build();
+        Skin {
+            button_style,
+            ..root_ui().default_skin()
         }
+    };
+    
+    loop {
+        root_ui().push_skin(&skin);
+        clear_background(WHITE);
+        root_ui().group(hash!(), vec2(200.0, 200.0), |ui| {
+            ui.label(None, "MENU");
+            if ui.button(None, "Start") {
+                return;
+            }
+            if ui.button(None, "Quit") {
+                exit(0);
+            }
+        });
         next_frame().await;
     }
 }
