@@ -2,7 +2,8 @@ use std::{mem, time::Instant};
 
 use macroquad::{
     audio::{load_sound_from_bytes, play_sound, PlaySoundParams},
-    prelude::*,
+    prelude::{self, *},
+    ui::root_ui,
 };
 
 const BLOCK_SIZE: f32 = 30.0;
@@ -32,15 +33,34 @@ async fn main() {
             volume: 0.2,
         },
     );
+    loop {
+        menu().await;
+        game().await;
+    }
+}
+
+async fn menu() {
+    loop {
+        clear_background(WHITE);
+        root_ui().label(vec2(50.0, 50.0), "Start");
+        if root_ui().button(None, "Push me") {
+            return;
+        }
+        next_frame().await;
+    }
+}
+
+async fn game() {
     let mut moving_blocks: Vec<Block> = vec![];
     let mut move_time = Instant::now();
     let mut laying_blocks: Vec<Block> = vec![];
     let mut rotatable = true;
     let mut points: u32 = 0;
+    let mut speed = 400;
     println!("{} {}", screen_width(), screen_height());
     loop {
         clear_background(WHITE);
-        if move_time.elapsed().as_millis() > 300 {
+        if move_time.elapsed().as_millis() > speed {
             move_time = Instant::now();
             if moving_blocks.iter().any(|mb| mb.if_stopped(&laying_blocks)) {
                 laying_blocks.append(&mut moving_blocks);
@@ -82,6 +102,9 @@ async fn main() {
             try_action(move_down, &laying_blocks, &mut moving_blocks);
         }
         if moving_blocks.is_empty() {
+            if speed > 100 {
+                speed -= 5;
+            }
             let new_shape = create_shape();
             moving_blocks = new_shape.0;
             rotatable = new_shape.1;
@@ -93,6 +116,9 @@ async fn main() {
             block.draw();
         }
 
+        if laying_blocks.iter().any(|lb| lb.0.y <= 0.0) {
+            return;
+        }
         draw_text(&format!("Points: {points}"), 20.0, 30.0, 20.0, GRAY);
 
         next_frame().await
@@ -151,7 +177,13 @@ fn create_shape() -> (Vec<Block>, bool) {
     (
         blocks_tuple
             .into_iter()
-            .map(|(x, y)| Block::new((x_start + x as f32) * BLOCK_SIZE, y as f32 * BLOCK_SIZE, color))
+            .map(|(x, y)| {
+                Block::new(
+                    (x_start + x as f32) * BLOCK_SIZE,
+                    y as f32 * BLOCK_SIZE,
+                    color,
+                )
+            })
             .collect(),
         shape != 0,
     )
