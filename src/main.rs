@@ -3,7 +3,7 @@ use std::{mem, time::Instant, process::exit};
 use macroquad::{
     audio::{load_sound_from_bytes, play_sound, PlaySoundParams},
     prelude::*,
-    ui::{root_ui, Skin}, hash,
+    ui::{root_ui, Skin, widgets}, hash,
 };
 
 const BLOCK_SIZE: f32 = 30.0;
@@ -46,6 +46,7 @@ async fn menu() {
         let button_style = root_ui()
             .style_builder()
             .text_color(BLACK)
+            .color(LIGHTGRAY)
             .font_size(30)
             .build();
         Skin {
@@ -57,15 +58,16 @@ async fn menu() {
     loop {
         root_ui().push_skin(&skin);
         clear_background(WHITE);
-        root_ui().group(hash!(), vec2(200.0, 200.0), |ui| {
-            ui.label(None, "MENU");
-            if ui.button(None, "Start") {
-                return;
-            }
-            if ui.button(None, "Quit") {
-                exit(0);
-            }
-        });
+        if widgets::Button::new("Start")
+            // .size(vec2(200., 300.))
+            .position(vec2(
+                150.0,
+                200.0,
+            ))
+            .ui(&mut *root_ui())
+        {
+            return;
+        }
         next_frame().await;
     }
 }
