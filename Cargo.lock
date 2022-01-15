@@ -188,7 +188,7 @@ dependencies = [
  "glam",
  "image",
  "macroquad_macro",
- "miniquad",
+ "miniquad 0.3.0-alpha.42",
  "quad-rand",
  "quad-snd",
 ]
@@ -204,6 +204,19 @@ name = "maybe-uninit"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "60302e4db3a61da70c0cb7991976248362f30319e88850c487b9b95bbf059e00"
+
+[[package]]
+name = "miniquad"
+version = "0.2.32"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1ef4f871d65ceb1603b1eb1f31e5a1f230ce4222c50739209d62fca2815febe1"
+dependencies = [
+ "sapp-darwin",
+ "sapp-dummy",
+ "sapp-linux",
+ "sapp-wasm",
+ "sapp-windows",
+]
 
 [[package]]
 name = "miniquad"
@@ -400,6 +413,7 @@ name = "tetris-rust"
 version = "0.1.0"
 dependencies = [
  "macroquad",
+ "miniquad 0.2.32",
 ]
 
 [[package]]

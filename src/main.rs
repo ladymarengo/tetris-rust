@@ -36,7 +36,7 @@ async fn main() {
     
 
     loop {
-        menu().await;
+        // menu().await;
         game().await;
     }
 }
@@ -79,7 +79,7 @@ async fn game() {
     let mut rotatable = true;
     let mut points: u32 = 0;
     let mut speed = 400;
-    println!("{} {}", screen_width(), screen_height());
+    println!("{} {} {}", screen_width(), screen_height(), miniquad::graphics::Context::new().dpi_scale());
     loop {
         clear_background(WHITE);
         if move_time.elapsed().as_millis() > speed {
