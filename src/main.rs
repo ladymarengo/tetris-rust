@@ -23,9 +23,10 @@ async fn main() {
     let mut move_time = Instant::now();
     let mut laying_blocks: Vec<Block> = vec![];
     let mut rotatable = true;
+    let mut points: u32 = 0;
     println!("{} {}", screen_width(), screen_height());
     loop {
-        clear_background(LIGHTGRAY);
+        clear_background(WHITE);
         if move_time.elapsed().as_millis() > 300 {
             move_time = Instant::now();
             if moving_blocks.iter().any(|mb| mb.if_stopped(&laying_blocks)) {
@@ -43,6 +44,7 @@ async fn main() {
                     .count()
                     >= 10
                 {
+                    points += 10;
                     laying_blocks.retain(|b| b.0.y != y as f32 * BLOCK_SIZE as f32);
                     laying_blocks
                         .iter_mut()
@@ -77,6 +79,8 @@ async fn main() {
         for block in &laying_blocks {
             block.draw();
         }
+
+        draw_text(&format!("Points: {points}"), 20.0, 30.0, 20.0, GRAY);
 
         next_frame().await
     }
