@@ -9,12 +9,13 @@ use macroquad::{
 const BLOCK_SIZE: f32 = 30.0;
 const SCREEN_WIDTH: f32 = BLOCK_SIZE * 10.0;
 const SCREEN_HEIGHT: f32 = BLOCK_SIZE * 20.0;
-const WTF_RATIO: f32 = 1.25;
+const WTF_RATIO: f32 = 1.0;
 
 fn window_conf() -> Conf {
     Conf {
         window_title: "Tetris".to_owned(),
         fullscreen: false,
+        high_dpi: false,
         window_width: (SCREEN_WIDTH * WTF_RATIO) as i32,
         window_height: (SCREEN_HEIGHT * WTF_RATIO) as i32,
         window_resizable: false,
