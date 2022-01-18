@@ -1,9 +1,10 @@
 use std::{mem, time::Instant, process::exit};
+use ::rand::Rng;
 
 use macroquad::{
     audio::{load_sound_from_bytes, play_sound, PlaySoundParams},
     prelude::*,
-    ui::{root_ui, Skin, widgets}, hash,
+    ui::{root_ui, Skin, widgets},
 };
 
 const BLOCK_SIZE: f32 = 30.0;
@@ -35,52 +36,81 @@ async fn main() {
         },
     );
     
+    let mut best_points: u32 = 0;
+    let mut points: u32 = 0;
 
     loop {
-        menu().await;
-        game().await;
+        menu(&best_points, &points).await;
+        game(&mut points).await;
+        if points > best_points {
+            best_points = points;
+        }
     }
 }
 
-async fn menu() {
+async fn menu(best_points: &u32, points: &u32) {
     let skin = {
         let button_style = root_ui()
             .style_builder()
             .text_color(BLACK)
-            .color(LIGHTGRAY)
-            .font_size(30)
+            .color(SKYBLUE)
+            .font_size(50)
             .build();
         Skin {
             button_style,
             ..root_ui().default_skin()
         }
     };
-    
+
     loop {
         root_ui().push_skin(&skin);
         clear_background(WHITE);
+        draw_text(&format!("Best points: {best_points}"), 45.0, 350.0, 35.0, BLACK);
+        draw_text(&format!("Last points: {points}"), 60.0, 385.0, 30.0, BLACK);
         if widgets::Button::new("Start")
-            // .size(vec2(200., 300.))
             .position(vec2(
-                150.0,
+                100.0,
                 200.0,
             ))
             .ui(&mut *root_ui())
         {
             return;
         }
+        if widgets::Button::new("Quit")
+            .position(vec2(
+                111.0,
+                250.0,
+            ))
+            .ui(&mut *root_ui())
+        {
+            exit(0);
+        }
         next_frame().await;
     }
 }
 
-async fn game() {
+async fn pause() {
+    let mut if_pause = false;
+    
+    loop {
+        clear_background(LIGHTGRAY);
+        draw_text(&format!("Press ESC to resume"), 45.0, 300.0, 25.0, BLACK);
+        if is_key_pressed(KeyCode::Escape) && if_pause {
+            break;
+        }
+        if_pause = true;
+        next_frame().await;
+    }
+}
+
+async fn game(points: &mut u32) {
     let mut moving_blocks: Vec<Block> = vec![];
     let mut move_time = Instant::now();
     let mut laying_blocks: Vec<Block> = vec![];
     let mut rotatable = true;
-    let mut points: u32 = 0;
     let mut speed = 400;
-    println!("{} {}", screen_width(), screen_height());
+    *points = 0;
+    
     loop {
         clear_background(WHITE);
         if move_time.elapsed().as_millis() > speed {
@@ -100,7 +130,7 @@ async fn game() {
                     .count()
                     >= 10
                 {
-                    points += 10;
+                    *points += 10;
                     laying_blocks.retain(|b| b.0.y != y as f32 * BLOCK_SIZE as f32);
                     laying_blocks
                         .iter_mut()
@@ -123,6 +153,9 @@ async fn game() {
         if is_key_pressed(KeyCode::Down) {
             let move_down = |mb: &mut [Block]| mb.iter_mut().for_each(|b| b.0.y += BLOCK_SIZE);
             try_action(move_down, &laying_blocks, &mut moving_blocks);
+        }
+        if is_key_pressed(KeyCode::Escape) {
+            pause().await;
         }
         if moving_blocks.is_empty() {
             if speed > 100 {
@@ -184,8 +217,9 @@ fn rotate(moving_blocks: &mut [Block]) {
 }
 
 fn create_shape() -> (Vec<Block>, bool) {
-    let shape: i32 = rand::gen_range(0, 6);
-    let x_start = rand::gen_range(1_i32, 9) as f32;
+    let mut rng = ::rand::thread_rng();
+    let shape: i32 = rng.gen_range(0..7);
+    let x_start = rng.gen_range(1..10) as f32;
 
     let (blocks_tuple, color) = match shape {
         0 => ([(0, -1), (0, 0), (1, 0), (1, -1)], MAGENTA),
